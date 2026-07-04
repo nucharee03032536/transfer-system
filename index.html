@@ -391,7 +391,7 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
         <div class="apv-box" id="apv-box-1">
           <div class="apv-head ah-1">👔 คนที่ 1 — หัวหน้าแผนก</div>
           <div class="apv-body">
-            <div class="fg" style="margin-bottom:9px"><label>ชื่อหัวหน้าแผนก</label><input type="text" id="apv1-name" placeholder="กรอกชื่อ"></div>
+            <div class="fg" style="margin-bottom:9px"><label>ชื่อผู้อนุมัติ (หัวหน้าแผนก)</label><input type="text" id="apv1-name" placeholder="ดึงจากบัญชีที่เข้าสู่ระบบอัตโนมัติ" readonly style="background:#f2f5f2;color:#37474f;font-weight:700;cursor:not-allowed"></div>
             <div class="fg" style="margin-bottom:11px"><label>หมายเหตุ</label><input type="text" id="apv1-note" placeholder="ความคิดเห็น"></div>
             <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
               <button class="btn btn-g btn-sm" onclick="approve(1,'approved')">✅ อนุมัติ</button>
@@ -403,7 +403,7 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
         <div class="apv-box" id="apv-box-2">
           <div class="apv-head ah-2">💼 คนที่ 2 — บัญชี &nbsp;<span style="font-size:11px;opacity:.7">(ต้องรอหัวหน้าอนุมัติก่อน)</span></div>
           <div class="apv-body">
-            <div class="fg" style="margin-bottom:9px"><label>ชื่อผู้บัญชี</label><input type="text" id="apv2-name" placeholder="กรอกชื่อ"></div>
+            <div class="fg" style="margin-bottom:9px"><label>ชื่อผู้อนุมัติ (บัญชี)</label><input type="text" id="apv2-name" placeholder="ดึงจากบัญชีที่เข้าสู่ระบบอัตโนมัติ" readonly style="background:#f2f5f2;color:#37474f;font-weight:700;cursor:not-allowed"></div>
             <div class="fg" style="margin-bottom:11px"><label>หมายเหตุ</label><input type="text" id="apv2-note" placeholder="ความคิดเห็น"></div>
             <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
               <button class="btn btn-g btn-sm" onclick="approve(2,'approved')">✅ อนุมัติ</button>
@@ -419,7 +419,8 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
   <div class="btn-row">
     <button class="btn btn-g" onclick="saveTransfer()">✅ บันทึกใบโอน</button>
     <button class="btn btn-gy" onclick="clearForm()">🗑 ล้างข้อมูล</button>
-    <button class="btn btn-b" onclick="printForm()">🖨 พิมพ์</button>
+    <button class="btn btn-b" onclick="printForm()">🖨 พิมพ์ / PDF</button>
+    <button class="btn btn-t" onclick="exportFormExcel()">📊 Excel</button>
   </div>
 </div>
 
@@ -442,7 +443,6 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
       </div>
     </div>
   </div>
-  <div class="btn-row"><button class="btn btn-r btn-sm" onclick="resetAll()">🔄 รีเซ็ตทั้งหมด</button></div>
 </div>
 
 <!-- ══════ TAB: รายสาขา ══════ -->
@@ -531,7 +531,6 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
       </div>
     </div>
   </div>
-  <div class="btn-row"><button class="btn btn-r btn-sm" onclick="clearSpoils()">🗑 ล้างรายการสปอยทั้งหมด</button></div>
 </div>
 
 <!-- ══════ TAB: ประวัติ ══════ -->
@@ -553,7 +552,6 @@ td input:focus{border-color:var(--g5);background:#fff;box-shadow:0 0 0 2px rgba(
       <div id="history-list"><div class="empty-state"><div class="emoji">📭</div><p>ยังไม่มีประวัติ</p></div></div>
     </div>
   </div>
-  <div class="btn-row"><button class="btn btn-r btn-sm" onclick="clearHistory()">🗑 ล้างประวัติทั้งหมด</button></div>
 </div>
 
 <!-- MODAL -->
@@ -647,7 +645,7 @@ function importData(){
         if(d.transfers)transfers=d.transfers;
         if(d.spoils)spoils=d.spoils;
         if(d.summary)LOCS.forEach(l=>{summary[l]=d.summary[l]||{out_c:0,out_v:0,in_c:0,in_v:0};});
-        saveLS();renderAll();toast("✅ Import สำเร็จ!");
+        saveLS();renderAll();refreshDocNo(true);toast("✅ Import สำเร็จ!");
       }catch(err){toast("❌ ไฟล์ไม่ถูกต้อง");}
     };
     r.readAsText(file);
@@ -679,7 +677,7 @@ async function loadFromSheets(){
     if(d.transfers) transfers = d.transfers;
     if(d.spoils) spoils = d.spoils;
     if(d.summary) LOCS.forEach(l=>{summary[l]=d.summary[l]||{out_c:0,out_v:0,in_c:0,in_v:0};});
-    saveLS(); renderAll();
+    saveLS(); renderAll(); refreshDocNo(true);
     loadUsers();
     toast("✅ โหลดจาก Google Sheets สำเร็จ! "+transfers.length+" ใบโอน, "+spoils.length+" สปอย");
   }catch(e){ toast('❌ โหลดไม่สำเร็จ: '+e.message); }
@@ -758,13 +756,13 @@ async function loadProducts(){
 }
 
 function searchProducts(q){
-  if(!q || q.length < 1) return [];
-  const kw = q.toLowerCase();
-  return products.filter(p =>
-    p.code.toLowerCase().includes(kw) ||
-    p.name.toLowerCase().includes(kw) ||
-    (p.category||"").toLowerCase().includes(kw)
-  ).slice(0,30);
+  const kw = (q||'').toLowerCase().trim();
+  const list = !kw ? products : products.filter(p =>
+    String(p.code).toLowerCase().includes(kw) ||
+    String(p.name).toLowerCase().includes(kw) ||
+    String(p.category||"").toLowerCase().includes(kw)
+  );
+  return list.slice(0,30);
 }
 
 // Open product picker for a specific row
@@ -856,6 +854,7 @@ function setCurrentUser(u){
     else localStorage.removeItem('tf_user');
   }catch(e){}
   updateRoleBanner();
+  refreshApproverFields();
 }
 function restoreSession(){
   try{
@@ -1004,11 +1003,12 @@ function init(){
   restoreSession();
   loadProducts();
   loadUsers();
-  document.getElementById('doc-no').value='TF-'+String(transfers.length+1).padStart(3,'0');
+  document.getElementById('doc-no').value=nextDocNo();
   for(let i=0;i<5;i++)addRow();
   renderAll();
   updateClock();
   updateRoleBanner();
+  refreshApproverFields();
   setInterval(updateClock,1000);
   // Single global listener to close product dropdowns when clicking elsewhere
   document.addEventListener('click', function(ev){
@@ -1020,7 +1020,7 @@ function init(){
 }
 function today(){return new Date().toISOString().split('T')[0]}
 function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleDateString('th-TH')+' '+n.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
-function renderAll(){renderDash();renderSummary();renderHistory();renderSpoilReport();renderSpoilSummaryTable();renderSpoilStats();document.getElementById('doc-no').value='TF-'+String(transfers.length+1).padStart(3,'0');}
+function renderAll(){renderDash();renderSummary();renderHistory();renderSpoilReport();renderSpoilSummaryTable();renderSpoilStats();refreshDocNo();}
 
 // ── TABS ──
 function showTab(id,btn){
@@ -1039,12 +1039,14 @@ function renderDash(){
   const totalOut=LOCS.reduce((a,l)=>a+summary[l].out_v,0);
   const totalIn=LOCS.reduce((a,l)=>a+summary[l].in_v,0);
   const totalSpoil=spoils.reduce((a,s)=>a+s.price,0);
-  const pending=transfers.filter(t=>t.overallStatus==='pending').length;
+  const wait1=transfers.filter(t=>approvalStage(t).code==='wait1').length;
+  const wait2=transfers.filter(t=>approvalStage(t).code==='wait2').length;
+  const pending=wait1+wait2;
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat-card sc-b"><div class="stat-label">📤 มูลค่าโอนออกรวม</div><div class="stat-val">฿${fmtK(totalOut)}</div><div class="stat-sub">${LOCS.reduce((a,l)=>a+summary[l].out_c,0)} รายการ</div></div>
     <div class="stat-card sc-r"><div class="stat-label">📥 มูลค่าโอนเข้ารวม</div><div class="stat-val">฿${fmtK(totalIn)}</div><div class="stat-sub">${LOCS.reduce((a,l)=>a+summary[l].in_c,0)} รายการ</div></div>
     <div class="stat-card sc-g"><div class="stat-label">📋 ใบโอนทั้งหมด</div><div class="stat-val">${transfers.length}</div><div class="stat-sub">เอกสาร</div></div>
-    <div class="stat-card sc-am"><div class="stat-label">⏳ รอการอนุมัติ</div><div class="stat-val">${pending}</div><div class="stat-sub">ใบ</div></div>
+    <div class="stat-card sc-am"><div class="stat-label">⏳ รอการอนุมัติ</div><div class="stat-val">${pending}</div><div class="stat-sub">รอขั้น1: ${wait1} • รอขั้น2: ${wait2}</div></div>
     <div class="stat-card sc-pk"><div class="stat-label">🗑 มูลค่าสปอยรวม</div><div class="stat-val">฿${fmtK(totalSpoil)}</div><div class="stat-sub">${spoils.length} รายการ</div></div>
   `;
   // Recent transfers
@@ -1198,9 +1200,52 @@ function approve(n,status){
   if(status==='approved'){badge.className='sb sb-ok';badge.textContent='✅ อนุมัติ';box.className='apv-box approved';}
   else{badge.className='sb sb-no';badge.textContent='❌ ไม่อนุมัติ';box.className='apv-box rejected';}
   toast((status==='approved'?'✅':'❌')+' '+(n===1?'หัวหน้าแผนก':'บัญชี')+' '+(status==='approved'?'อนุมัติแล้ว':'ไม่อนุมัติ'));
+  refreshApproverFields();
+}
+
+// เติมชื่อผู้อนุมัติจากบัญชีที่เข้าสู่ระบบให้อัตโนมัติ (ไม่ต้องพิมพ์เอง)
+function refreshApproverFields(){
+  [1,2].forEach(n=>{
+    const el=document.getElementById('apv'+n+'-name'); if(!el) return;
+    const p=pendingApv[n];
+    if(p && (p.status==='approved'||p.status==='rejected') && p.name){ el.value=p.name; }       // อนุมัติแล้ว → ชื่อผู้อนุมัติจริง
+    else if(currentUser && canStep(n)){ el.value=currentUser.name; }                             // มีสิทธิ์ → แสดงชื่อล่วงหน้า
+    else { el.value=''; }                                                                        // ยังไม่มีสิทธิ์ → ว่าง (โชว์ placeholder)
+  });
+}
+
+// ── ตรวจสอบสถานะการอนุมัติของใบโอน (อยู่ลำดับใด / ยังค้างอยู่ไหม) ──
+function approvalStage(t){
+  const a1=(t.apv1&&t.apv1.status)||'pending', a2=(t.apv2&&t.apv2.status)||'pending';
+  if(a1==='rejected'||a2==='rejected')
+    return {code:'rejected', step:0, done:true, label:'❌ ไม่อนุมัติ', short:'ไม่อนุมัติ'};
+  if(a1!=='approved')
+    return {code:'wait1', step:1, done:false, label:'⏳ รออนุมัติ ขั้นที่ 1 (หัวหน้าแผนก)', short:'รอขั้น 1'};
+  if(a2!=='approved')
+    return {code:'wait2', step:2, done:false, label:'⏳ รออนุมัติ ขั้นที่ 2 (บัญชี)', short:'รอขั้น 2'};
+  return {code:'approved', step:3, done:true, label:'✅ อนุมัติครบ 2 ขั้นแล้ว', short:'อนุมัติครบ'};
+}
+function stageBadge(t){
+  const s=approvalStage(t);
+  const cls = s.code==='approved'?'tg-g':s.code==='rejected'?'tg-r':'tg-am';
+  return '<span class="tag '+cls+'">'+s.short+'</span>';
 }
 
 // ── SAVE TRANSFER ──
+// สร้างเลขที่ใบโอนถัดไปจากเลขสูงสุดที่มีอยู่จริง (กันเลขชนกัน)
+function nextDocNo(){
+  let max = 0;
+  transfers.forEach(t=>{
+    const m = /TF-(\d+)/i.exec(t.docNo||'');
+    if(m){ const n = parseInt(m[1],10); if(n>max) max = n; }
+  });
+  return 'TF-' + String(max+1).padStart(3,'0');
+}
+function refreshDocNo(force){
+  const el = document.getElementById('doc-no');
+  if(!el) return;
+  if(force || !el.value.trim()) el.value = nextDocNo();
+}
 function saveTransfer(){
   if(!currentUser){
     openLogin(()=>saveTransfer(), 'เข้าสู่ระบบก่อนบันทึกใบโอน');
@@ -1235,19 +1280,143 @@ function saveTransfer(){
 function clearForm(){
   ['sel-from','sel-to','sender','reason','apv1-name','apv1-note','apv2-name','apv2-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('route-badge').style.display='none';
-  document.getElementById('doc-no').value='TF-'+String(transfers.length+1).padStart(3,'0');
+  document.getElementById('doc-no').value=nextDocNo();
   document.getElementById('doc-date').value=today();
   document.getElementById('items-body').innerHTML='';document.querySelectorAll('.prod-dropdown').forEach(d=>d.remove());for(let i=0;i<5;i++)addRow();calcTotal();
   [1,2].forEach(n=>{pendingApv[n]={status:'pending',name:'',note:'',time:''};
     document.getElementById('apv'+n+'-status').className='sb sb-p';
     document.getElementById('apv'+n+'-status').textContent='⏳ รอ';
     document.getElementById('apv-box-'+n).className='apv-box';});
+  refreshApproverFields();
 }
-function printForm(){
-  const f=document.getElementById('sel-from').value,t=document.getElementById('sel-to').value;
-  if(!f||!t)return toast('⚠️ กรุณาเลือกสาขาก่อนพิมพ์');
-  window.print();
+// ── พิมพ์ / PDF / EXCEL (รองรับภาษาไทย) ──
+function collectTransferForm(){
+  const g=id=>document.getElementById(id);
+  const from=g('sel-from').value, to=g('sel-to').value;
+  if(!from||!to){ toast('⚠️ กรุณาเลือกสาขาต้นทาง–ปลายทางก่อน'); return null; }
+  const items=[];
+  document.querySelectorAll('#items-body tr').forEach(tr=>{
+    const code=(tr.cells[1]?.querySelector('input')?.value||'').trim();
+    const name=(tr.cells[2]?.querySelector('input')?.value||'').trim();
+    const unit=(tr.cells[3]?.querySelector('input')?.value||'').trim();
+    const qtyO=parseFloat(tr.cells[4]?.querySelector('input')?.value)||0;
+    const qtyR=parseFloat(tr.cells[5]?.querySelector('input')?.value)||0;
+    const price=parseFloat(tr.cells[6]?.querySelector('input')?.value)||0;
+    if(name) items.push({code,name,unit,qtyO,qtyR,price,total:qtyO*price});
+  });
+  if(!items.length){ toast('⚠️ ยังไม่มีรายการสินค้า'); return null; }
+  const totalVal=items.reduce((s,i)=>s+i.total,0);
+  return { from,to, docNo:g('doc-no').value.trim(), date:g('doc-date').value,
+    sender:g('sender').value.trim(), reason:g('reason').value.trim(),
+    items, totalVal, apv1:pendingApv[1], apv2:pendingApv[2] };
 }
+
+function apvText(a){
+  if(!a||!a.status||a.status==='pending') return {name:'', mark:'ลงชื่อ..............................', status:'รออนุมัติ'};
+  return {name:a.name||'', mark:(a.name||''), status:(a.status==='approved'?'อนุมัติ':'ไม่อนุมัติ')};
+}
+
+// สร้างเอกสารสำหรับพิมพ์/บันทึก PDF (ใช้ฟอนต์ไทย)
+function buildPrintDoc(d){
+  const rows=d.items.map((it,i)=>`<tr>
+    <td class="c">${i+1}</td><td>${escapeHtml(it.code||'-')}</td><td>${escapeHtml(it.name)}</td>
+    <td class="c">${escapeHtml(it.unit||'-')}</td><td class="c">${it.qtyO}</td><td class="c">${it.qtyR||'-'}</td>
+    <td class="r">${fmt(it.price)}</td><td class="r">${fmt(it.total)}</td></tr>`).join('');
+  const a1=apvText(d.apv1), a2=apvText(d.apv2);
+  return `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+<title>ใบโอนสินค้า ${escapeHtml(d.docNo||'')}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'TH Sarabun New','Sarabun','Leelawadee UI','Tahoma',sans-serif;color:#111;margin:24px;font-size:15px}
+  h1{text-align:center;font-size:22px;margin:0 0 2px}
+  .sub{text-align:center;color:#555;font-size:13px;margin-bottom:16px}
+  .meta{width:100%;border-collapse:collapse;margin-bottom:12px}
+  .meta td{padding:4px 8px;font-size:14px;vertical-align:top}
+  .meta .lbl{color:#555;width:90px}
+  table.items{width:100%;border-collapse:collapse;margin-top:4px}
+  table.items th,table.items td{border:1px solid #999;padding:5px 7px;font-size:13.5px}
+  table.items th{background:#e8f0e8;font-weight:700}
+  td.c,th.c{text-align:center}.r{text-align:right}
+  tfoot td{font-weight:700;background:#f4f8f4}
+  .sign{display:flex;gap:24px;margin-top:34px}
+  .sign .box{flex:1;text-align:center}
+  .sign .line{margin-top:34px;border-top:1px dotted #333;padding-top:5px;font-size:13px}
+  .st{font-size:12px;color:#555}
+  @media print{body{margin:12mm}}
+</style></head><body>
+  <h1>ใบโอนสินค้าระหว่างสาขา</h1>
+  <div class="sub">Santhiya Collection — Inter-Branch Transfer</div>
+  <table class="meta"><tr>
+    <td class="lbl">เลขที่เอกสาร</td><td><b>${escapeHtml(d.docNo||'-')}</b></td>
+    <td class="lbl">วันที่</td><td>${escapeHtml(d.date||'-')}</td></tr>
+    <tr><td class="lbl">โอนจาก</td><td><b>${escapeHtml(d.from)}</b></td>
+    <td class="lbl">โอนไปยัง</td><td><b>${escapeHtml(d.to)}</b></td></tr>
+    <tr><td class="lbl">ผู้โอน</td><td>${escapeHtml(d.sender||'-')}</td>
+    <td class="lbl">เหตุผล</td><td>${escapeHtml(d.reason||'-')}</td></tr>
+  </table>
+  <table class="items"><thead><tr>
+    <th class="c">#</th><th>รหัส</th><th>ชื่อสินค้า</th><th class="c">หน่วย</th>
+    <th class="c">จำนวนโอน</th><th class="c">จำนวนรับ</th><th class="r">ราคา/หน่วย</th><th class="r">รวม (฿)</th>
+  </tr></thead><tbody>${rows}</tbody>
+  <tfoot><tr><td colspan="7" class="r">มูลค่ารวมทั้งสิ้น</td><td class="r">${fmt(d.totalVal)} ฿</td></tr></tfoot>
+  </table>
+  <div class="sign">
+    <div class="box"><div class="line">${escapeHtml(a1.mark)}</div>ผู้อนุมัติ (หัวหน้าแผนก)<div class="st">สถานะ: ${a1.status}</div></div>
+    <div class="box"><div class="line">${escapeHtml(a2.mark)}</div>ผู้อนุมัติ (บัญชี)<div class="st">สถานะ: ${a2.status}</div></div>
+    <div class="box"><div class="line">..............................</div>ผู้รับสินค้าปลายทาง</div>
+  </div>
+<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script>
+</body></html>`;
+}
+
+// สร้างไฟล์ Excel (HTML table + UTF-8 → เปิดใน Excel ได้ ภาษาไทยไม่เพี้ยน)
+function buildExcelHTML(d){
+  const rows=d.items.map((it,i)=>`<tr>
+    <td>${i+1}</td><td>${escapeHtml(it.code||'')}</td><td>${escapeHtml(it.name)}</td>
+    <td>${escapeHtml(it.unit||'')}</td><td>${it.qtyO}</td><td>${it.qtyR||0}</td>
+    <td>${it.price}</td><td>${it.total}</td></tr>`).join('');
+  const a1=apvText(d.apv1), a2=apvText(d.apv2);
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8"><style>td,th{border:1px solid #999;padding:4px 8px;font-family:Tahoma,sans-serif;font-size:11pt}
+th{background:#e8f0e8;font-weight:bold} .num{mso-number-format:"#,##0.00"}</style></head><body>
+<table>
+  <tr><td colspan="8" style="font-size:15pt;font-weight:bold;text-align:center">ใบโอนสินค้าระหว่างสาขา — Santhiya Collection</td></tr>
+  <tr><td>เลขที่เอกสาร</td><td>${escapeHtml(d.docNo||'')}</td><td>วันที่</td><td>${escapeHtml(d.date||'')}</td><td>โอนจาก</td><td>${escapeHtml(d.from)}</td><td>โอนไปยัง</td><td>${escapeHtml(d.to)}</td></tr>
+  <tr><td>ผู้โอน</td><td>${escapeHtml(d.sender||'')}</td><td>เหตุผล</td><td colspan="5">${escapeHtml(d.reason||'')}</td></tr>
+  <tr></tr>
+  <tr><th>#</th><th>รหัส</th><th>ชื่อสินค้า</th><th>หน่วย</th><th>จำนวนโอน</th><th>จำนวนรับ</th><th>ราคา/หน่วย</th><th>รวม</th></tr>
+  ${rows}
+  <tr><td colspan="7" style="text-align:right;font-weight:bold">มูลค่ารวมทั้งสิ้น</td><td style="font-weight:bold">${d.totalVal}</td></tr>
+  <tr></tr>
+  <tr><td colspan="2">ผู้อนุมัติ (หัวหน้าแผนก)</td><td>${escapeHtml(a1.name)}</td><td>สถานะ: ${a1.status}</td></tr>
+  <tr><td colspan="2">ผู้อนุมัติ (บัญชี)</td><td>${escapeHtml(a2.name)}</td><td>สถานะ: ${a2.status}</td></tr>
+</table></body></html>`;
+}
+
+function downloadBlob(blob, filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1200);
+}
+
+function printData(d){
+  const w=window.open('','_blank','width=900,height=700');
+  if(!w){ toast('⚠️ เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up'); return; }
+  w.document.open(); w.document.write(buildPrintDoc(d)); w.document.close();
+}
+function excelData(d){
+  const blob=new Blob(['\ufeff'+buildExcelHTML(d)], {type:'application/vnd.ms-excel;charset=utf-8;'});
+  downloadBlob(blob, 'ใบโอน_'+(d.docNo||'doc')+'.xls');
+  toast('📊 ดาวน์โหลดไฟล์ Excel แล้ว');
+}
+
+// จากฟอร์มสร้างใบโอน
+function printForm(){ const d=collectTransferForm(); if(d) printData(d); }
+function exportFormExcel(){ const d=collectTransferForm(); if(d) excelData(d); }
+// จากใบโอนที่บันทึกแล้ว (หน้าประวัติ/รายละเอียด)
+function printTransfer(docNo){ const t=transfers.find(x=>x.docNo===docNo); if(t) printData(t); else toast('⚠️ ไม่พบใบโอน'); }
+function exportTransferExcel(docNo){ const t=transfers.find(x=>x.docNo===docNo); if(t) excelData(t); else toast('⚠️ ไม่พบใบโอน'); }
 
 // ── SUMMARY ──
 function renderSummary(){
@@ -1414,12 +1583,6 @@ function renderSpoilSummaryTable(){
     <td class="ctr" style="padding:9px">${tQ>0?tQ.toFixed(2):'-'}</td>
     <td style="text-align:right;padding:9px;color:#ef9a9a">${fmt(tV)}</td><td style="padding:9px"></td>`;
 }
-function clearSpoils(){
-  requirePrivileged(()=>{
-    if(!confirm('ล้างรายการสปอยทั้งหมดใช่ไหม?'))return;
-    spoils=[];saveLS();renderSpoilReport();renderSpoilSummaryTable();renderSpoilStats();renderDash();toast('🗑 ล้างรายการสปอยแล้ว');
-  });
-}
 
 // ── HISTORY ──
 function renderHistory(){
@@ -1442,7 +1605,7 @@ function renderHistory(){
         <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
           <span class="tag tg-b">${t.items.length} รายการ</span>
           <span class="tag tg-g">฿${fmt(t.totalVal)}</span>
-          ${sbadge(t.overallStatus)}
+          ${stageBadge(t)}
         </div>
       </div>
       <span style="color:var(--gy4);font-size:20px;flex-shrink:0;transition:transform .2s">▾</span>
@@ -1482,23 +1645,24 @@ function transferDetail(t){
     <div class="sig-box">
       <div class="sig-label">📊 สรุปสถานะ</div>
       <div style="margin-top:6px">${sbadge(t.overallStatus)}</div>
-      <div class="sig-note" style="margin-top:7px">${t.overallStatus==='approved'?'✅ ผ่านทั้ง 2 ฝ่าย':t.overallStatus==='rejected'?'❌ ถูกปฏิเสธ':'⏳ รอการอนุมัติ'}</div>
+      <div class="sig-note" style="margin-top:7px">${approvalStage(t).label}</div>
     </div>
+  </div>
+  <div class="btn-row" style="margin-top:10px">
+    <button class="btn btn-b btn-sm" onclick="printTransfer('${escapeHtml(t.docNo)}')">🖨 พิมพ์ / PDF</button>
+    <button class="btn btn-t btn-sm" onclick="exportTransferExcel('${escapeHtml(t.docNo)}')">📊 Excel</button>
   </div>
   ${approvalActions(t)}`;
 }
-// Build the approve-later action panel (shown for pending transfers)
+// Build the approve-later action panel (shows only the current actionable step)
 function approvalActions(t){
+  const s=approvalStage(t);
   const blocks=[];
-  if(t.apv1.status==='pending'){
-    blocks.push(stepBlock(1,'👔 อนุมัติขั้นที่ 1 (หัวหน้าแผนก)'));
-  }
-  if(t.apv1.status==='approved' && t.apv2.status==='pending'){
-    blocks.push(stepBlock(2,'💼 อนุมัติขั้นที่ 2 (บัญชี)'));
-  }
+  if(s.code==='wait1') blocks.push(stepBlock(1,'👔 อนุมัติขั้นที่ 1 (หัวหน้าแผนก)'));
+  if(s.code==='wait2') blocks.push(stepBlock(2,'💼 อนุมัติขั้นที่ 2 (บัญชี)'));
   if(!blocks.length) return '';
   return `<div class="apv-actions" data-doc="${escapeHtml(t.docNo)}" style="margin-top:12px;border-top:2px dashed var(--gy3);padding-top:12px">
-    <div class="sec-label" style="color:var(--g7)">⚡ ดำเนินการอนุมัติ</div>
+    <div class="sec-label" style="color:var(--g7)">⚡ ดำเนินการอนุมัติ &nbsp;<span style="font-weight:600;color:var(--gy6);font-size:12px">(${s.label})</span></div>
     ${blocks.join('')}
   </div>`;
 }
@@ -1555,20 +1719,6 @@ function showImgPreview(src){document.getElementById('img-prev-src').src=src;doc
 function closeImgPreview(){document.getElementById('img-prev-modal').classList.remove('open');}
 
 // ── UTILS ──
-function resetAll(){
-  requirePrivileged(()=>{
-    if(!confirm('รีเซ็ตข้อมูลการโอนทั้งหมดใช่ไหม?'))return;
-    LOCS.forEach(l=>summary[l]={out_c:0,out_v:0,in_c:0,in_v:0});transfers=[];
-    saveLS();renderSummary();renderHistory();renderDash();toast('🔄 รีเซ็ตเรียบร้อย');
-  });
-}
-function clearHistory(){
-  requirePrivileged(()=>{
-    if(!confirm('ล้างประวัติการโอนทั้งหมดใช่ไหม?'))return;
-    transfers=[];LOCS.forEach(l=>summary[l]={out_c:0,out_v:0,in_c:0,in_v:0});
-    saveLS();renderHistory();renderSummary();renderDash();toast('🗑 ล้างประวัติแล้ว');
-  });
-}
 function fmt(n){return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'K':fmt(n)}
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
