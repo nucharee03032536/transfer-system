@@ -1065,11 +1065,11 @@ function renderDash(){
 
   // Charts
   buildChart('chart-branch','bar',
-    LOCS.map(l=>l.substring(0,6)),
+    LOCS.map(l=>l),
     [{label:'โอนออก',data:LOCS.map(l=>summary[l].out_v),backgroundColor:'rgba(13,71,161,.7)'},{label:'โอนเข้า',data:LOCS.map(l=>summary[l].in_v),backgroundColor:'rgba(183,28,28,.7)'}]
   );
   buildChart('chart-spoil','bar',
-    LOCS.map(l=>l.substring(0,6)),
+    LOCS.map(l=>l),
     [{label:'มูลค่าสปอย',data:LOCS.map(l=>spoils.filter(s=>s.branch===l).reduce((a,b)=>a+b.price,0)),backgroundColor:'rgba(136,14,79,.7)'}]
   );
   const reasons=['หมดอายุ','เน่าเสีย','แตกหัก','คุณภาพไม่ผ่าน','อุบัติเหตุ','อื่นๆ'];
@@ -1101,7 +1101,7 @@ function buildChart(id,type,labels,datasets){
         const pct=Math.round((val/maxVal)*100);
         const color=ds.backgroundColor||colors[di%colors.length];
         h+=`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px">
-          <div style="width:90px;text-align:right;color:#424242;font-family:Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${lbl}">${lbl}</div>
+          <div style="width:118px;text-align:right;color:#424242;font-family:Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${lbl}">${lbl}</div>
           <div style="flex:1;background:#F5F5F5;border-radius:4px;height:18px;overflow:hidden">
             <div style="width:${pct}%;background:${typeof color==='string'?color:color};height:100%;border-radius:4px;transition:width .4s;min-width:${val>0?2:0}px"></div>
           </div>
